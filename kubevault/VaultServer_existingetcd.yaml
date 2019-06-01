@@ -1,0 +1,18 @@
+apiVersion: kubevault.com/v1alpha1
+kind: VaultServer
+metadata:
+  name: vaultserver
+  namespace: vault
+spec:
+  nodes: 2
+  version: 1.0.1
+  backend:
+    etcd:
+      address: "http://etcd-kubevault.vault.svc:2379"
+      etcdApi: "v3"
+  unsealer:
+    secretShares: 4
+    secretThreshold: 2
+    mode:
+      kubernetesSecret:
+        secretName: vault-keys

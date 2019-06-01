@@ -1,0 +1,10 @@
+apiVersion: kubevault.com/v1alpha1
+#apiVersion: "vault.security.coreos.com/v1alpha1"
+kind: VaultServer
+#kind: "VaultService"
+metadata:
+  name: "example"
+spec:
+  nodes: 2
+  version: "1.0.0"
+
