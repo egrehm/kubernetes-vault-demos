@@ -1,4 +1,11 @@
 #! /bin/bash
+
+# Use Ansible for now !!!!!
+
+exit 0
+
+
+
 set -aeuo pipefail
 set -x 
 
