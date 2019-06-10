@@ -1,11 +1,12 @@
 #! /bin/bash
-
+set -aeuo pipefail
 #set -x
 #APP=${APP:-registry}
 SVC_ACC=vault-${APP}
 ROLE=${APP}-role
 NAMESPACE=$APP
 SECRETPATH=${SECRETPATH:-}
+VAULTSERVER=https://vaultserver.vault.svc:8200
 f_init(){
 kubectl get ns $NAMESPACE > /dev/null 2>&1 || kubectl create ns $NAMESPACE
 }
@@ -47,20 +48,20 @@ echo "
 kind: Pod
 apiVersion: v1
 metadata:
-  name: nginx
+  name: vault-${APP}-test
 spec:
   serviceAccountName: vault-${APP}
   initContainers:
     - name: vault-init
       image: everpeace/curl-jq
       command:
-        - "sh"
-        - "-c"
+        - \"sh\"
+        - \"-c\"
         - >
-          KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
-          curl --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "postgres"}' http://errant-mandrill-vault:8200/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
-          X_VAULT_TOKEN=$(cat /etc/vault/token);
-          curl --header "X-Vault-Token: $X_VAULT_TOKEN" http://errant-mandrill-vault:8200/v1/database/creds/postgres-role > /etc/app/creds.json;
+          KUBE_TOKEN=\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+          curl --request POST --data '{\"jwt\": \"\$KUBE_TOKEN\", \"role\": \"$SVC_ACC\"}' ${VAULTSERVER}/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+          X_VAULT_TOKEN=\$(cat /etc/vault/token);
+          curl --header \"X-Vault-Token: \$X_VAULT_TOKEN\" ${VAULTSERVER}/v1/secret/$SECRETPATH/${APP}/registry > /etc/app/registry;
       volumeMounts:
         - name: app-creds
           mountPath: /etc/app
@@ -70,19 +71,24 @@ spec:
   - image: vault
     name: vault
     command:
-      - "cat"
+      - \"cat\"
     volumeMounts:
     - mountPath: /var/run/secrets/tokens
       name: vault-token
+    - name: app-creds
+      mountPath: /etc/app
   serviceAccountName: vault-${APP}
   volumes:
   - name: vault-token
-    projected:
-      sources:
-      - serviceAccountToken:
-          path: vault-token
-          expirationSeconds: 7200
-          audience: vault
+    emptyDir: {}
+    #alt_way projected:
+    #alt_way   sources:
+    #alt_way   - serviceAccountToken:
+    #alt_way       path: vault-token
+    #alt_way       expirationSeconds: 7200
+    #alt_way       audience: vault
+  - name: app-creds
+    emptyDir: {}
 " | kubectl apply -n $APP -f- 
 
 
@@ -99,8 +105,7 @@ for APP in red green blue; do
   SVC_ACC=vault-${APP}
   ROLE=${APP}-role
   NAMESPACE=$APP
-  SECRETPATH=${SECRETPATH:-}
-  export SECRETPATH=cluster/demo
+  SECRETPATH=cluster/demo
   f_init
   f_create_sa
   vault write secret/$SECRETPATH/${APP}/registry value=$APP 

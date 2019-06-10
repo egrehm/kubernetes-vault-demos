@@ -1,5 +1,5 @@
 #! /bin/bash
-
+set -x
 export POLICY=${APP}-kv-ro
 tee  > /tmp/${POLICY}.hcl << EOF
 # For K/V v1 secrets engine
@@ -11,6 +11,7 @@ path "secret/$SECRETPATH/${APP}/*" {
     capabilities = ["read", "list"]
 }
 EOF
+
 vault policy write ${POLICY} /tmp/${POLICY}.hcl
 vault write auth/kubernetes/role/${ROLE} bound_service_account_names=${SVC_ACC} bound_service_account_namespaces=${APP} policies=${POLICY} ttl=24h
 
@@ -44,4 +45,5 @@ EOF
 vault policy write ${POLICY} /tmp/${POLICY}.hcl
 vault write auth/kubernetes/role/${ROLE} bound_service_account_names=${SVC_ACC} bound_service_account_namespaces=${APP} policies=${POLICY} ttl=24h
 
+set +x
 
