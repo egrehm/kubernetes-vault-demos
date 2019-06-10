@@ -21,5 +21,9 @@ vault read -field=password secret/build/registry/config
 
 
 ```
+# secret test
+```
+./nox-vault-demo.sh
+```
 
 
