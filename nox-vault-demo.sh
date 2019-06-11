@@ -2,10 +2,10 @@
 set -aeuo pipefail
 #set -x
 #APP=${APP:-registry}
-SVC_ACC=vault-${APP}
-ROLE=${APP}-role
-NAMESPACE=$APP
-SECRETPATH=${SECRETPATH:-}
+#SVC_ACC=vault-${APP}
+#ROLE=${APP}-role
+#NAMESPACE=$APP
+#SECRETPATH=${SECRETPATH:-}
 VAULTSERVER=https://vaultserver.vault.svc:8200
 f_init(){
 kubectl get ns $NAMESPACE > /dev/null 2>&1 || kubectl create ns $NAMESPACE

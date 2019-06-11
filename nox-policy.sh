@@ -34,11 +34,11 @@ vault write auth/kubernetes/role/${ROLE} bound_service_account_names=${SVC_ACC} 
 POLICY=${APP}-kv-ro-dev
 cat  > /tmp/${POLICY}.hcl << EOF
 # For K/V v1 secrets engine
-path "secret/$SECRETPATH/${APP}/dev*" {
+path "secret/$SECRETPATH/${APP}/dev/*" {
     capabilities = ["read", "list"]
 }
 # For K/V v2 secrets engine
-path "secret/$SECRETPATH/${APP}/dev*" {
+path "secret/$SECRETPATH/${APP}/dev/*" {
     capabilities = ["read", "list"]
 }
 EOF
