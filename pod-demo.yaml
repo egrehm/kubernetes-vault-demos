@@ -1,0 +1,71 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: vault-demo-test
+  namespace: demo
+spec:
+  serviceAccountName: vault-ro
+  initContainers:
+  - name: vault-init
+    image: everpeace/curl-jq
+    command:
+      - "sh"
+      - "-c"
+      - >
+        KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+        curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "demo-ro"}' https://vaultserver.vault.svc:8200/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+        sleep 5;
+        export X_VAULT_TOKEN=$(cat /etc/vault/token);
+        curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry;
+        curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry > /etc/app/registry;
+    volumeMounts:
+      - name: app-creds
+        mountPath: /etc/app
+      - name: vault-token
+        mountPath: /etc/vault
+ containers:
+  - name: vault-debugger
+    image: vault
+    volumeMounts:
+    - mountPath: /etc/vault
+      name: vault-token
+    - name: app-creds
+      mountPath: /etc/app
+    env: 
+    - name: VAULT_ADDR 
+      value: https://vaultserver.vault.svc:8200 
+    - name: VAULT_SKIP_VERIFY 
+      value: "true"
+  - name: vault-manager
+    image: everpeace/curl-jq
+    command:
+      - "sh"
+      - "-c"
+      - >
+        KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+        curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "demo-ro"}' https://vaultserver.vault.svc:8200/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+        X_VAULT_TOKEN=$(cat /etc/vault/token);
+        curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry; 
+        curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry > /etc/app/secret;
+    volumeMounts:
+    - mountPath: /etc/vault
+      name: vault-token
+    - name: app-creds
+      mountPath: /etc/app
+    env: 
+    - name: VAULT_ADDR 
+      value: https://vaultserver.vault.svc:8200 
+    - name: VAULT_SKIP_VERIFY 
+      value: "true"
+  serviceAccountName: vault-ro
+  volumes:
+  - name: vault-token
+    emptyDir: {}
+    #alt_way projected:
+    #alt_way   sources:
+    #alt_way   - serviceAccountToken:
+    #alt_way       path: vault-token
+    #alt_way       expirationSeconds: 7200
+    #alt_way       audience: vault
+  - name: app-creds
+    emptyDir: {}
