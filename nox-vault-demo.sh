@@ -97,12 +97,52 @@ kubectl apply -n $NAMESPACE --filename /tmp/pod-${APP}.yaml
 
 }
 
-
-f_gen_policy(){
-f_gen_ro_policy
-f_gen_rw_policy
-f_gen_ro_dev_policy
+f_vault_write_secret(){
+SECRETPATH=$1
+SECRETNAME=$APP
+# create secret  and write to vault
+RANDOMSEC=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w16 | head -n1)
+vault  write ${SECRETPATH}/${SECRETNAME} value=${RANDOMSEC}
 }
+
+f_vault_gen_policy(){
+SECRETPATH=$1
+POLICY=${APP}-${NAMESPACE}-${TYPE}
+# create secret  and write to vault
+envsubst < policy-${TYPE}-tmpl.hcl > /tmp/${POLICY}.hcl
+
+}
+
+f_usage(){
+echo "
+
+$0 -c -a <APP> -n <NAMESPACE> -p <PATH/TO/SECRET>
+
+-c create secret and policy
+-a APP
+-n NAMESPACE
+-p PATH to secret i.e "secret/cluster/prod/team42"
+
+example:
+$0 -c -a registry -n demo -p secret/for/demo
+
+"
+}
+
+while getopts ":a:p:n:h" opt; do
+    case "$opt" in
+        a) APP="$OPTARG";;
+        p) PATH="$OPTARG"; IS_SVC=true ;;
+        n) NAMESPACE="$OPTARG";;
+        :) echo "Option -$OPTARG requires an argument." >&2 ; exit 1;;
+        \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
+        h) f_usage ;;
+        *) f_usage ;;
+    esac
+done
+
+echo " needs finish"
+exit 1
 
 for APP in red green blue; do  
   SVC_ACC=vault-${APP}

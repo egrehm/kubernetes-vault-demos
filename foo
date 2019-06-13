@@ -1,0 +1,22 @@
+#! /bin/bash
+set -aeuo pipefail
+#set -x 
+
+f_usage(){
+echo "usage: $0"
+}
+
+while getopts ":p:s:i:hno" opt; do
+    case "$opt" in
+        p) PROJECT="$OPTARG";;
+        s) SVC="$OPTARG"; IS_SVC=true ;; 
+        i) extIP="$OPTARG";;
+        n) TOGGLE=True ;; # no OPTARG no ":" 
+        o) TOGGLE=True ;;  
+        :) echo "Option -$OPTARG requires an argument." >&2 ; exit 1;;
+        \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
+        h) f_usage ;;
+        *) f_usage ;;
+    esac 
+done
+

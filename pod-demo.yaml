@@ -4,8 +4,8 @@ metadata:
   name: vault-demo-test
   namespace: demo
 spec:
-  serviceAccountName: vault-ro
-  initContainers:
+ serviceAccountName: vault-ro
+ initContainers:
   - name: vault-init
     image: everpeace/curl-jq
     command:
@@ -14,15 +14,14 @@ spec:
       - >
         KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
         curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "demo-ro"}' https://vaultserver.vault.svc:8200/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
-        sleep 5;
         export X_VAULT_TOKEN=$(cat /etc/vault/token);
         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry;
         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" https://vaultserver.vault.svc:8200/v1/secret/demo/registry > /etc/app/registry;
     volumeMounts:
-      - name: app-creds
-        mountPath: /etc/app
-      - name: vault-token
-        mountPath: /etc/vault
+    - name: app-creds
+      mountPath: /etc/app
+    - name: vault-token
+      mountPath: /etc/vault
  containers:
   - name: vault-debugger
     image: vault
