@@ -33,7 +33,7 @@ Read as:
 
 
 
-# set Vault enviroment
+### set Vault enviroment
 you might use (after editing to match your env):
 
 ```
