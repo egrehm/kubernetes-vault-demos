@@ -88,6 +88,7 @@ $0 -c -a <APP> -n <NAMESPACE> -p <PATH/TO/SECRET>
 -n NAMESPACE
 -t Type of account [ro|rw]
 -p PATH to secret i.e "secret/cluster/prod/team42"
+-S create new secret
 example:
   $0 -c -a registry -n demo -p secret/for/demo -t ro
 
@@ -151,7 +152,7 @@ CREATE= ; RUN_DEMO= ; SERVICEACCOUNT=${SERVICEACCOUNT:-} ; NAMESPACE=${NAMESPACE
 
 ### GETOPTS
 #set -x
-while getopts ":a:p:n:s:v:t:r:gcdh" opt; do
+while getopts ":a:p:n:s:v:t:r:gcdhS" opt; do
     case "$opt" in
         a) APP="$OPTARG";;
         p) SECRETPATH="$OPTARG";;
@@ -162,6 +163,7 @@ while getopts ":a:p:n:s:v:t:r:gcdh" opt; do
         g) GATHER_FACTS=True;;
         c) CREATE=True ;;
         d) RUN_DEMO=True ;;
+        S) CREATE_SECRET=True ;;
         :) echo "Option -$OPTARG requires an argument." >&2 ; exit 1;;
         \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
         h) f_usage ;;
@@ -191,9 +193,11 @@ if [[ $RUN_DEMO == True ]]; then
   # del first to save a bit time
   f_del_demo_pod  
 fi
+if [[ ${CREATE_SECRET:-False} == True ]]; then
+  f_vault_write_random_secret
+fi  
 if [[ $CREATE == True ]]; then
   APP=${APP:-config}
-  f_vault_write_random_secret  
   f_vault_gen_policy
 fi
 if [[ $RUN_DEMO == True ]]; then

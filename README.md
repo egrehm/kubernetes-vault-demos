@@ -11,7 +11,7 @@ all demos here *require an existing kubernetes cluster* be configured with clust
 one step demo getopts way
 ```
 cd ./demo/nox-simple
-./nox-vault-demo.sh -c -d -g -a webapp -n demo -p secret/for/demo -t ro  -s webaccount -t ro 
+./nox-vault-demo.sh -c -d -g -a webapp -n demo -p secret/for/demo -t ro  -s webaccount -t ro -S 
 ```
 ... or if you prefer to define variables yourself this is fine too
 ```
@@ -19,7 +19,8 @@ export APP=webapp
 export NAMESPACE=demo
 export SECRETPATH=secret/for/demo
 export TYPE=ro
-export SERVICEACCOUNT=webaccount;
+export SERVICEACCOUNT=webaccount
+export CREATE_SECRET=True
 ./nox-vault-demo.sh -c -d -g
 ```
 
