@@ -1,7 +1,7 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: vault-demo-test
+  name: @@@APP@@@ 
   namespace: @@@NAMESPACE@@@ 
 spec:
   serviceAccountName: @@@SERVICEACCOUNT@@@
