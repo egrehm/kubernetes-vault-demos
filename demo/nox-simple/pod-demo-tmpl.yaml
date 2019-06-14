@@ -7,24 +7,31 @@ spec:
   serviceAccountName: @@@SERVICEACCOUNT@@@
   initContainers:
     - name: vault-init
-      image: everpeace/curl-jq
+      image: egrehm/curl:3
       command:
-        - "sh"
+        - "bash"
         - "-c"
         - >
-          DEBUG=yes ;  echo  "never do this in prod" ;
           KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
-          curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+          curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+          cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
           X_VAULT_TOKEN=$(cat /etc/vault/token);
-          cat /etc/vault/token;
-          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.we_need_to_login_twice ; 
-          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@ ;
-          cat /etc/app/@@@APP@@@ | jq -j '.data.value' > /etc/app/@@@APP@@@.plainpass ; 
-          if [ DEBUG == yes ] ; then
-           echo "/etc/app/@@@APP@@@: ";  cat /etc/app/@@@APP@@@ ;
-           echo "/etc/app/@@@APP@@@.we_need_to_login_twice: "; cat /etc/app/@@@APP@@@.we_need_to_login_twice ;
-           echo "/etc/app/@@@APP@@@.plainpass: "; cat /etc/app/@@@APP@@@.plainpass ;
-          fi
+          [ -e /etc/app/@@@APP@@@ ] || echo "undefined" > /etc/app/@@@APP@@@;
+          echo "I have to loop around 50% chance of getting permission denied. Until fix." 
+          until $(grep -q request_id /etc/app/@@@APP@@@); do
+            date ;
+            curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.full ;
+            cat /etc/app/@@@APP@@@.full;
+            sleep 2;
+          done          
+          cat /etc/app/@@@APP@@@.full | jq -j '.data.value' > /etc/vault/token;
+          # curl  -ks --request POST  --header "X-Vault-Token: $X_VAULT_TOKEN" --data '{"type": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/sys/auth/kubernetes/@@@ROLE@@@;
+          # curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/;
+          # curl -ks --request POST @@@REMOTE_VAULT_ADDR@@@/v1/auth/token/lookup ;
+          # curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.we_need_to_login_twice ; 
+          # curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.we_need_to_login_again ; 
+          #  echo "/etc/app/@@@APP@@@.we_need_to_login_twice: "; cat /etc/app/@@@APP@@@.we_need_to_login_twice ;
+          #  echo "/etc/app/@@@APP@@@.plainpass: "; cat /etc/app/@@@APP@@@.plainpass ;
       volumeMounts:
         - mountPath: /etc/vault
           name: vault-token
@@ -36,8 +43,16 @@ spec:
         - name: VAULT_SKIP_VERIFY 
           value: "true"
   containers:
-    - name: nginx
-      image: nginx
+    - name:  curl
+      image: egrehm/curl:3
+      # command:
+      #   - "sh"
+      #   - "-c"
+      #   - >
+      #     while true; do
+      #       cat /etc/app/@@@APP@@@;
+      #       sleep 10;
+      #     done ;
       volumeMounts:
       - mountPath: /etc/vault
         name: vault-token
@@ -48,6 +63,18 @@ spec:
           value: @@@REMOTE_VAULT_ADDR@@@ 
         - name: VAULT_SKIP_VERIFY 
           value: "true"
+    #- name: nginx
+    #  image: nginx
+    #  volumeMounts:
+    #  - mountPath: /etc/vault
+    #    name: vault-token
+    #  - name: app-creds
+    #    mountPath: /etc/app
+    #  env: 
+    #    - name: VAULT_ADDR 
+    #      value: @@@REMOTE_VAULT_ADDR@@@ 
+    #    - name: VAULT_SKIP_VERIFY 
+    #      value: "true"
   volumes:
     - name: vault-token
       emptyDir: {}
