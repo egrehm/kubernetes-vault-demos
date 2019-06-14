@@ -6,18 +6,25 @@ metadata:
 spec:
   serviceAccountName: @@@SERVICEACCOUNT@@@
   initContainers:
-    - name: vault-manager
+    - name: vault-init
       image: everpeace/curl-jq
       command:
         - "sh"
         - "-c"
         - >
+          DEBUG=yes ;  echo  "never do this in prod" ;
           KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
           curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
           X_VAULT_TOKEN=$(cat /etc/vault/token);
-          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.we_need_to_login_twice ;
-          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@;
-          cat /etc/app/@@@APP@@@ | jq -j '.data.value' > /etc/app/@@@APP@@@.plainpass ;
+          cat /etc/vault/token;
+          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.we_need_to_login_twice ; 
+          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@ ;
+          cat /etc/app/@@@APP@@@ | jq -j '.data.value' > /etc/app/@@@APP@@@.plainpass ; 
+          if [ DEBUG == yes ] ; then
+           echo "/etc/app/@@@APP@@@: ";  cat /etc/app/@@@APP@@@ ;
+           echo "/etc/app/@@@APP@@@.we_need_to_login_twice: "; cat /etc/app/@@@APP@@@.we_need_to_login_twice ;
+           echo "/etc/app/@@@APP@@@.plainpass: "; cat /etc/app/@@@APP@@@.plainpass ;
+          fi
       volumeMounts:
         - mountPath: /etc/vault
           name: vault-token
