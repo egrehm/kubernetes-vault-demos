@@ -53,12 +53,19 @@ vault policy write ${POLICY}  /tmp/${POLICY}.hcl
 vault write auth/kubernetes/role/${VAULT_ROLE} bound_service_account_names=${SERVICEACCOUNT} bound_service_account_namespaces=${NAMESPACE} policies=${POLICY} ttl=24h
 }
 
-f_gen_demo_pod(){
+f_del_demo_pod(){
 if $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); then
   echo "delete existing pod"
-  kubectl delete po -n $NAMESPACE $APP
-  sleep 5
+  kubectl delete po -n $NAMESPACE $APP > /dev/null 2>&1 &
 fi
+}
+
+f_gen_demo_pod(){
+while $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); do
+  echo "still deleting existing pod:   $(kubectl get po -n $NAMESPACE $APP --no-headers )"
+  sleep 2
+done
+
 sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
     -e "s/@@@SERVICEACCOUNT@@@/${SERVICEACCOUNT}/g" \
     -e "s#@@@REMOTE_VAULT_ADDR@@@#${REMOTE_VAULT_ADDR}#g" \
@@ -66,6 +73,7 @@ sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
     -e "s#@@@SECRETPATH@@@#${SECRETPATH}#g" \
     -e "s#@@@APP@@@#${SECRETNAME}#g" \
     pod-demo-tmpl.yaml > /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml
+echo "DEBUG: kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml"
 kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml
 }
 
@@ -166,6 +174,10 @@ if [[ -n $NAMESPACE ]]; then
 fi
 if [[ -n $SERVICEACCOUNT ]]; then
   f_create_sa
+fi
+if [[ $RUN_DEMO == True ]]; then
+  # del first to save a bit time
+  f_del_demo_pod  
 fi
 if [[ $CREATE == True ]]; then
   APP=${APP:-config}
