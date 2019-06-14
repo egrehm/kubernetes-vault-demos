@@ -5,14 +5,11 @@ metadata:
   name: vault-agent-example
 spec:
   serviceAccountName: vault-nox
-
   restartPolicy: Never
-
   volumes:
     - name: vault-token
       emptyDir:
         medium: Memory
-
     - name: config
       configMap:
         name: example-vault-agent-config
@@ -22,28 +19,23 @@ spec:
 
           - key: consul-template-config.hcl
             path: consul-template-config.hcl
-
     - name: shared-data
       emptyDir: {}
-
   initContainers:
     # Vault container
     - name: vault-agent-auth
       image: vault
-
       volumeMounts:
         - name: config
           mountPath: /etc/vault
         - name: vault-token
           mountPath: /home/vault
-
       # This assumes Vault running on local host and K8s running in Minikube using VirtualBox
       env:
         - name: VAULT_ADDR
           value: https://vaultserver.vault.svc:8200
         - name: VAULT_SKIP_VERIFY
           value: "true"
-
       # Run the Vault agent
       args:
         [
@@ -51,46 +43,36 @@ spec:
           "-config=/etc/vault/vault-agent-config.hcl",
           #"-log-level=debug",
         ]
-
   containers:
     # Consul Template container
     - name: consul-template
       image: hashicorp/consul-template:alpine
       imagePullPolicy: Always
-
       volumeMounts:
         - name: vault-token
           mountPath: /home/vault
-
         - name: config
           mountPath: /etc/consul-template
-
         - name: shared-data
           mountPath: /etc/secrets
-
       env:
         - name: HOME
           value: /home/vault
-
         - name: VAULT_ADDR
           value: https://vaultserver.vault.svc:8200
         - name: VAULT_SKIP_VERIFY
           value: "true"
-
       # Consul-Template looks in $HOME/.vault-token, $VAULT_TOKEN, or -vault-token (via CLI)
       args:
         [
           "-config=/etc/consul-template/consul-template-config.hcl",
           #"-log-level=debug",
         ]
-
     # Nginx container
     - name: nginx-container
       image: nginx
-
       ports:
         - containerPort: 80
-
       volumeMounts:
         - name: shared-data
           mountPath: /usr/share/nginx/html

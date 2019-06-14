@@ -1,0 +1,76 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: vault-demo-test
+  namespace: @@@NAMESPACE@@@ 
+spec:
+  # serviceAccountName: @@@SERVICEACCOUNT@@@
+  # initContainers:
+  #   - name: vault-init
+  #     image: everpeace/curl-jq
+  #     command:
+  #       - "sh"
+  #       - "-c"
+  #       - >
+  #         KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+  #         curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+  #         export X_VAULT_TOKEN=$(cat /etc/vault/token);
+  #         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.init_first ;
+  #         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.init_2nd ;
+  #         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.init_3rd ;
+  #         curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@
+  #     volumeMounts:
+  #       - name: app-creds
+  #         mountPath: /etc/app
+  #       - name: vault-token
+  #         mountPath: /etc/vault
+  containers:
+    - name: vault-debugger
+      image: vault
+      volumeMounts:
+      - mountPath: /etc/vault
+        name: vault-token
+      - name: app-creds
+        mountPath: /etc/app
+      env: 
+        - name: VAULT_ADDR 
+          value: @@@REMOTE_VAULT_ADDR@@@ 
+        - name: VAULT_SKIP_VERIFY 
+          value: "true"
+    - name: vault-manager
+      image: everpeace/curl-jq
+      command:
+        - "sh"
+        - "-c"
+        - >
+          KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+          curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login | jq -j '.auth.client_token' > /etc/vault/token;
+          X_VAULT_TOKEN=$(cat /etc/vault/token);
+          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.manager_first ;
+          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.manager_2nd ;
+          curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.manager ;
+          cat
+      volumeMounts:
+        - mountPath: /etc/vault
+          name: vault-token
+        - name: app-creds
+          mountPath: /etc/app
+      env: 
+        - name: VAULT_ADDR 
+          value: @@@REMOTE_VAULT_ADDR@@@ 
+        - name: VAULT_SKIP_VERIFY 
+          value: "true"
+  volumes:
+    - name: vault-token
+      emptyDir: {}
+    - name: app-creds
+      emptyDir: {}
+
+
+
+    #alt_way projected:
+    #alt_way   sources:
+    #alt_way   - serviceAccountToken:
+    #alt_way       path: vault-token
+    #alt_way       expirationSeconds: 7200
+    #alt_way       audience: vault
