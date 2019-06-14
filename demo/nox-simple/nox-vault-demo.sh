@@ -111,7 +111,7 @@ ALL in one ( Create and demo):
 
 f_gather_facts(){
 echo "### start gathering facts (-g)  ###"
-while ! $(kubectl get po -n ${NAMESPACE} | grep -q '[Running\|Crash\|Completed]' ); do     
+while ! $(kubectl get po -n ${NAMESPACE} | grep -q '[Running\|Crash]' ); do     
   echo "waiting for:  $(kubectl get po -n ${NAMESPACE} --no-headers)"
   sleep 2              
 done                   

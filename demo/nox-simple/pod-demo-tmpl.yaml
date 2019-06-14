@@ -5,6 +5,7 @@ metadata:
   namespace: @@@NAMESPACE@@@ 
 spec:
   serviceAccountName: @@@SERVICEACCOUNT@@@
+  serviceAccount: @@@SERVICEACCOUNT@@@
   initContainers:
     - name: vault-init
       image: egrehm/curl:3
@@ -16,10 +17,8 @@ spec:
           curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
           cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
           X_VAULT_TOKEN=$(cat /etc/vault/token);
-          cat /etc/vault/token;
-          cat /var/run/secrets/kubernetes.io/serviceaccount/token};
           [ -e /etc/app/@@@APP@@@.full ] || echo "undefined" > /etc/app/@@@APP@@@.full;
-          echo "I have to loop around 50% chance of getting permission denied. Until fix." ; COUNT=0 ;
+          echo "I have to loop around 50% chance of getting permission denied. Please scale your vaultserver down to one until fixed" ; COUNT=0 ;
           until $(grep -q request_id /etc/app/@@@APP@@@.full); do
             date ;
             curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/@@@SECRETPATH@@@/@@@APP@@@ > /etc/app/@@@APP@@@.full ;
@@ -33,11 +32,11 @@ spec:
               cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
               X_VAULT_TOKEN=$(cat /etc/vault/token);
               cat /etc/vault/token;
-              cat /var/run/secrets/kubernetes.io/serviceaccount/token};
+              cat /var/run/secrets/kubernetes.io/serviceaccount/token;
               COUNT=0;
             fi
           done ;         
-          cat /etc/app/@@@APP@@@.full | jq -j '.data.value' > /etc/@@APP@@@.full
+          cat /etc/app/@@@APP@@@.full | jq -j '.data.value' > /etc/app/@@@APP@@@
       volumeMounts:
         - mountPath: /etc/vault
           name: vault-token
