@@ -11,9 +11,7 @@ all demos here *require an existing kubernetes cluster* be configured with clust
 one step demo
 ```
 cd ./demo/nox-simple
-./nox-vault-demo.sh -c -d -a webapp -n demo -p secret/for/demo -t ro  -s webaccount -t ro -r my-role
-while ! $(kubectl get po -n demo | grep -q Running ); do echo "waiting for:  $(kubectl get po -n demo --no-headers)"; sleep 2; done
-kubectl exec -it -n demo webapp -c nginx -- cat /etc/app/webapp /etc/app/webapp.plainpass;echo
+./nox-vault-demo.sh -c -d -g -a webapp -n demo -p secret/for/demo -t ro  -s webaccount -t ro -r my-role
 ```
 
 Read as:

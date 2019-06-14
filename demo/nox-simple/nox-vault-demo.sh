@@ -102,12 +102,36 @@ ALL in one ( Create and demo):
 "
 }
 
+f_gather_facts(){
+
+while ! $(kubectl get po -n demo | grep -q Running ); do     
+  echo "waiting for:  $(kubectl get po -n demo --no-headers)"
+  sleep 2              
+done                   
+echo "Created passobjects from container ( cat /etc/app/webapp /etc/app/webapp.plainpass):"  
+kubectl exec -it -n demo webapp -c nginx -- cat /etc/app/webapp /etc/app/webapp.plainpass;echo
+echo "Created vault secret 'secret/for/demo/webapp':"
+vault read secret/for/demo/webapp
+echo "#################"
+echo "Created vault auth/kubernetes/role"
+vault read auth/kubernetes/role/webaccount_demo_ro
+echo "Created vault policy webapp-demo-ro"
+vault policy read webapp-demo-ro
+echo "#################"
+echo "k8s serviceaccount in 'demo':"
+kubectl get sa -n demo webaccount
+echo "#################"
+echo "created clusterrolebinding:"
+kubectl get clusterrolebinding webaccount-demo-tokenreview-binding
+}
+
+
 # init vars for strict
 CREATE= ; RUN_DEMO= ; SERVICEACCOUNT= ; NAMESPACE=
 
 ### GETOPTS
 #set -x
-while getopts ":a:p:n:s:v:t:r:cdh" opt; do
+while getopts ":a:p:n:s:v:t:r:gcdh" opt; do
     case "$opt" in
         a) APP="$OPTARG";;
         p) SECRETPATH="$OPTARG";;
@@ -115,6 +139,7 @@ while getopts ":a:p:n:s:v:t:r:cdh" opt; do
         s) SERVICEACCOUNT="$OPTARG";;
         t) TYPE="$OPTARG";; # just ro or rw are valid
         v) REMOTE_VAULT_ADDR="$OPTARG";;
+        g) GATHER_FACTS=True;;
         c) CREATE=True ;;
         d) RUN_DEMO=True ;;
         :) echo "Option -$OPTARG requires an argument." >&2 ; exit 1;;
@@ -150,3 +175,6 @@ if [[ $RUN_DEMO == True ]]; then
   f_gen_demo_pod  
   kubectl get po,sa -n $NAMESPACE
 fi
+if [[ $GATHER_FACTS == True ]]; then
+  f_gather_facts
+fi 
