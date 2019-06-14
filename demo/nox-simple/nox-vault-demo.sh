@@ -19,7 +19,7 @@ else
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: ${APP}-${NAMESPACE}-tokenreview-binding
+  name: ${VAULT_ROLE}-tokenreview-binding
   namespace: $NAMESPACE 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -55,9 +55,9 @@ vault write auth/kubernetes/role/${VAULT_ROLE} bound_service_account_names=${SER
 }
 
 f_gen_demo_pod(){
-if $(kubectl get po -n $NAMESPACE vault-demo-test > /dev/null 2>&1 ); then
+if $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); then
   echo "delete existing pod"
-  kubectl delete po -n $NAMESPACE vault-demo-test
+  kubectl delete po -n $NAMESPACE $APP
   sleep 5
 fi
 sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/" \
@@ -120,7 +120,7 @@ while getopts ":a:p:n:s:v:t:r:cdh" opt; do
         :) echo "Option -$OPTARG requires an argument." >&2 ; exit 1;;
         \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
         h) f_usage ;;
-        *) f_usage ;;
+        #*) f_usage ;;
     esac
 done
 
