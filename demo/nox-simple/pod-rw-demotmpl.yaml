@@ -1,0 +1,81 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: @@@APP@@@ 
+  namespace: @@@NAMESPACE@@@ 
+spec:
+  serviceAccountName: @@@SERVICEACCOUNT@@@
+  serviceAccount: @@@SERVICEACCOUNT@@@
+  initContainers:
+    - name: vault-init
+      image: egrehm/curl:3
+      command:
+        - "bash"
+        - "-c"
+        - >
+          KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+          curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+          cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
+          X_VAULT_TOKEN=$(cat /etc/vault/token);
+          for SEC in team-a team-b team-c; do
+            RANDOMSEC=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w16 | head -n1) || true ;
+            curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" --request POST --data '{"registrypass": "'"$RANDOMSEC"'"}'  @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC ;
+          done;
+          cat /etc/app/@@@APP@@@.full | jq -j '.data.value' > /etc/app/@@@APP@@@
+      volumeMounts:
+        - mountPath: /etc/vault
+          name: vault-token
+        - name: app-creds
+          mountPath: /etc/app
+      env: 
+        - name: VAULT_ADDR 
+          value: @@@REMOTE_VAULT_ADDR@@@ 
+        - name: VAULT_SKIP_VERIFY 
+          value: "true"
+  containers:
+    - name:  curl
+      image: egrehm/curl:3
+      command:
+        - "sh"
+        - "-c"
+        - >
+          while true; do
+            cat /etc/app/@@@APP@@@;
+            sleep 10;
+          done ;
+      volumeMounts:
+      - mountPath: /etc/vault
+        name: vault-token
+      - name: app-creds
+        mountPath: /etc/app
+      env: 
+        - name: VAULT_ADDR 
+          value: @@@REMOTE_VAULT_ADDR@@@ 
+        - name: VAULT_SKIP_VERIFY 
+          value: "true"
+    - name: nginx
+      image: nginx
+      volumeMounts:
+      - mountPath: /etc/vault
+        name: vault-token
+      - name: app-creds
+        mountPath: /etc/app
+      env: 
+        - name: VAULT_ADDR 
+          value: @@@REMOTE_VAULT_ADDR@@@ 
+        - name: VAULT_SKIP_VERIFY 
+          value: "true"
+  volumes:
+    - name: vault-token
+      emptyDir: {}
+    - name: app-creds
+      emptyDir: {}
+
+
+
+    #alt_way projected:
+    #alt_way   sources:
+    #alt_way   - serviceAccountToken:
+    #alt_way       path: vault-token
+    #alt_way       expirationSeconds: 7200
+    #alt_way       audience: vault

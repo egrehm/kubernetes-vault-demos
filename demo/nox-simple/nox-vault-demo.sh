@@ -3,6 +3,7 @@ set -aeuo pipefail
 #set -x
 VAULTSERVER=https://vaultserver.vault.svc:8200
 LOCALVAULTSERVER=https://127.0.0.1:8200  
+
 f_init(){
 kubectl get ns $NAMESPACE > /dev/null 2>&1 || kubectl create ns $NAMESPACE
 }
@@ -76,6 +77,25 @@ sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
 echo "DEBUG: kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml"
 kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml
 }
+f_gen_rw_demo_pods(){
+NAMESPACE_SAVE=$NAMESPACE
+SERVICEACCOUNT_SAVE=$SERVICEACCOUNT
+NAMESPACE=demo
+SERVICEACCOUNT=ci-cd-sec-creator
+TYPE=rw
+SECRETPATH=
+# create pod with rw role in demo secret/infra/ci_cd_created/team-a
+# creare random secrets
+for TEAM in team-a team-b team-c; do
+  NAMESPACE=$TEAM
+  SERVICEACCOUNT=${TEAM}-registry
+  f_init
+  f_create_sa
+  f_vault_gen_policy
+done
+NAMESPACE=$NAMESPACE_SAVE
+SERVICEACCOUNT=$SERVICEACCOUNT_SAVE
+}
 
 f_usage(){
 echo "
@@ -83,31 +103,37 @@ echo "
 $0 -c -a <APP> -n <NAMESPACE> -p <PATH/TO/SECRET>
 
 # Create 
--c create secret and policy
--a APP
--n NAMESPACE
--t Type of account [ro|rw]
--p PATH to secret i.e "secret/cluster/prod/team42"
--S create new secret
+-c create policy and binding
+  -a APP
+  -n NAMESPACE
+  -t Type of account [ro|rw]
+  -p PATH to secret i.e "secret/cluster/prod/team42"
+  -S create new secret
 example:
   $0 -c -a registry -n demo -p secret/for/demo -t ro
 
 # Start Demo pod
 -d demo
--n NAMESPACE 
--s SERVICEACCOUNT
--t Type of account [ro|rw]
--v REMOTE_VAULT_ADDR defaults to $VAULTSERVER
+  -n NAMESPACE 
+  -s SERVICEACCOUNT
+  -t Type of account [ro|rw]
+  -v REMOTE_VAULT_ADDR defaults to $VAULTSERVER
 example:
   $0 -d -n demo -s demoaccount -t ro -v $VAULTSERVER
      Read as: 
        create readonly demo account with name 'demoaccount' in namespace 'demo'
 
-Vault kubernetes role will be \${SERVICEACCOUNT}_\${NAMESPACE}_\${TYPE}
-ALL in one ( Create and demo):
- $0 -c -d -a registry -n demo -p secret/for/demo -t ro  -s demoaccount -t ro  -v $VAULTSERVER
+# Gather Facts:
+-g 
+
+# create secret
+-S
+
+ALL in one ( Create, demo, gather_facts):
+ $0 -c -d -g -a registry -n demo -p secret/for/demo -t ro  -s demoaccount -t ro  -v $VAULTSERVER -S
 
 "
+exit 1
 }
 
 f_gather_facts(){
@@ -159,6 +185,7 @@ while getopts ":a:p:n:s:v:t:r:gcdhS" opt; do
         n) NAMESPACE="$OPTARG";;
         s) SERVICEACCOUNT="$OPTARG";;
         t) TYPE="$OPTARG";; # just ro or rw are valid
+        r) RW_DEMO=True ;;
         v) REMOTE_VAULT_ADDR="$OPTARG";;
         g) GATHER_FACTS=True;;
         c) CREATE=True ;;
@@ -204,6 +231,10 @@ if [[ $RUN_DEMO == True ]]; then
   echo "create pod in $NAMESPACE with sa: $SERVICEACCOUNT"
   f_gen_demo_pod  
 fi
-if [[ $GATHER_FACTS == True ]]; then
+if [[ $RUN_DEMO == True ]]; then
+  echo "create pods for read-write"
+  f_gen_rw_demo_pods  
+fi
+if [[ ${GATHER_FACTS:-False} == True ]]; then
   f_gather_facts
 fi 
