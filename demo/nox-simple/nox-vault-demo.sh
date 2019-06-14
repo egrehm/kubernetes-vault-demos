@@ -56,7 +56,7 @@ vault write auth/kubernetes/role/${VAULT_ROLE} bound_service_account_names=${SER
 f_del_demo_pod(){
 if $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); then
   echo "delete existing pod"
-  kubectl delete po -n $NAMESPACE $APP > /dev/null 2>&1 &
+  kubectl delete po -n $NAMESPACE $APP --force --grace-period=0 > /dev/null 2>&1 &
 fi
 }
 
@@ -111,31 +111,43 @@ ALL in one ( Create and demo):
 
 f_gather_facts(){
 echo "### start gathering facts (-g)  ###"
-while ! $(kubectl get po -n ${NAMESPACE} | grep -q '[Running\|Crash]' ); do     
+while ! $(kubectl get po -n ${NAMESPACE} | grep -q '2/2.*Running' ); do     
   echo "waiting for:  $(kubectl get po -n ${NAMESPACE} --no-headers)"
   sleep 2              
 done                   
-echo "Created passobjects from container ( cat /etc/app/webapp /etc/app/webapp.plainpass):"  
-set -x
-kubectl exec -it -n ${NAMESPACE} webapp -c curl -- cat /etc/app/webapp /etc/app/webapp.plainpass;echo
-echo "Created vault secret 'secret/for/demo/webapp':"
-vault read secret/for/demo/webapp
-echo "#################"
+sleep 2
+echo "########################################################################################"
 echo "Created vault auth/kubernetes/role"
+echo "########################################################################################"
 vault read auth/kubernetes/role/${VAULT_ROLE}
+echo "########################################################################################"
 echo "Created vault policy ${POLICY}"
+echo "########################################################################################"
 vault policy read ${POLICY}
-echo "#################"
+echo "########################################################################################"
 echo "k8s serviceaccount in 'demo':"
+echo "########################################################################################"
 kubectl get sa -n ${NAMESPACE} $SERVICEACCOUNT
-echo "#################"
+echo "########################################################################################"
 echo "created clusterrolebinding:"
+echo "########################################################################################"
 kubectl get clusterrolebinding ${VAULT_ROLE}-tokenreview-binding 
+echo "########################################################################################"
+echo "Created secret from vaultserver  'secret/for/demo/${APP}':"
+echo "########################################################################################"
+vault read ${SECRETPATH}/${APP}
+echo "########################################################################################"
+echo "Here is your vault password delivered into your container!"
+echo "Created passobjects from container ( cat /etc/app/${APP} /etc/app/${APP}.full):"  
+echo "########################################################################################"
+kubectl exec -it -n ${NAMESPACE} ${APP} -c curl -- cat /etc/app/${APP}.full /etc/app/${APP}
+echo
+echo "########################################################################################"
 }
 
 
 # init vars for strict
-CREATE= ; RUN_DEMO= ; SERVICEACCOUNT= ; NAMESPACE=
+CREATE= ; RUN_DEMO= ; SERVICEACCOUNT=${SERVICEACCOUNT:-} ; NAMESPACE=${NAMESPACE:-}
 
 ### GETOPTS
 #set -x
