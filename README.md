@@ -1,13 +1,13 @@
 # some demos for vault on kubernetes
 
-> all demos here require an existing kubernetes cluster be configured with cluster-admin rights!
+all demos here *require an existing kubernetes cluster* be configured with cluster-admin rights!
 
 
-# create demo app against running vaultserver
+## create demo app against running vaultserver
 
-> requires a configured vault cli in the executing terminal (see set Vault enviroment)!
+*requires a configured vault cli* in the executing terminal (see set Vault enviroment)!
 
-## tl;dr
+### tl;dr
 one step demo
 ```
 cd ./demo/nox-simple
