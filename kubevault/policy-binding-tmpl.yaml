@@ -1,12 +1,12 @@
 apiVersion: policy.kubevault.com/v1alpha1
 kind: VaultPolicyBinding
 metadata:
-  name: secret-admin
-  namespace: demo
+  name: vault-ro-bind
+  namespace: @@@NAMESPACE@@@
 spec:
-  policies: ["secret-admin"]
-  serviceAccountNames: ["sa1","sa2"]
-  serviceAccountNamespaces: ["default","demo"]
+  policies: ["vault-ro"]
+  serviceAccountNames: ["vault-ro","vault-ro2"]
+  serviceAccountNamespaces: ["@@@NAMESPACE@@@","demo"]
   TTL: "1000"
   maxTTL: "2000"
   Period: "1000"

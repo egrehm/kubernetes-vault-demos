@@ -1,0 +1,13 @@
+apiVersion: policy.kubevault.com/v1alpha1
+kind: VaultPolicy
+metadata:
+  name: vault-rw
+  namespace:@@@NAMESPACE@@@
+spec:
+  vaultAppRef:
+    name: vault
+    namespace: @@NAMESPACE@@@
+  policy: |
+    path "@@@SECRETPATH@@@/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
