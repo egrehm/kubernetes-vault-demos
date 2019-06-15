@@ -1,0 +1,22 @@
+---
+
+# cluster-init
+# ansible-playbook cluster-init.yml -i inventory/cluster-full-init.yml --extra-vars="service=all project=XXX"
+
+- hosts: ansiblemaster 
+  tasks:
+    - name: include cluster-svc vars
+      include_vars:
+        file: vars/cluster-svc.yml
+    - name: "include cluster-svc-{{ project }} vars" 
+      include_vars:
+        file: vars/cluster-svc-{{ project }}.yml
+
+- hosts: client-{{ project }}
+  roles:
+    - { role: purge-ceph-osd }
+
+
+- hosts: ansiblemaster 
+  roles:
+    - { role: cluster-svc }
