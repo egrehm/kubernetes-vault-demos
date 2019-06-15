@@ -17,11 +17,11 @@ or same with getops
 
 ## executed steps:
 
-### prep
+### 1. prep
 1. create namespace demo if not existing
 1. create serviceaccount with name 'webaccount' in namespace 'demo'
 
-### create
+### 2. create
 1. random secret in secret/for/demo/webapp if "CREATE_SECRET=True"
 1. create clusterrolebinding 'webaccount-demo-tokenreview-binding'
 1. create vault ro|rw policy for 'secret/for/demo/\*'
