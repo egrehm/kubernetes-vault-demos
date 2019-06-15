@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vault-static-sidecar.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "vault-static-sidecar.name" . }}
+    helm.sh/chart: {{ include "vault-static-sidecar.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "vault-static-sidecar.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "vault-static-sidecar.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.image.pullSecretsName }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecretsName | quote }}
+      {{- end }}
+      serviceAccountName: {{ .Values.vault.serviceAccount }}
+      serviceAccount: {{ .Values.vault.serviceAccount }}
+      initContainers:
+        - name: vault-init
+          image: {{ .Values.vault.repository }}:{{ .Values.vault.tag }}
+          #image: egrehm/curl:3
+          command:
+            - "bash"
+            - "-c"
+            - >
+              KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+              curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+              cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
+              X_VAULT_TOKEN=$(cat /etc/vault/token);
+              for TEAM in team-a team-b team-c; do
+              echo "DEBUG: get secret @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM/registrypass";
+              curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM/registrypass > /etc/app/$TEAM ;
+              cat /etc/app/$TEAM;
+              done
+          volumeMounts:
+            - mountPath: /etc/vault
+              name: vault-token
+            - name: app-creds
+              mountPath: /etc/app
+          env:
+        {{- range $key, $value :=  .Values.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -78,13 +78,15 @@ while $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); do
   sleep 2
 done
 
-sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
-    -e "s/@@@SERVICEACCOUNT@@@/${SERVICEACCOUNT}/g" \
-    -e "s#@@@REMOTE_VAULT_ADDR@@@#${REMOTE_VAULT_ADDR}#g" \
-    -e "s#@@@ROLE@@@#${VAULT_ROLE}#g" \
-    -e "s#@@@SECRETPATH@@@#${SECRETPATH}#g" \
-    -e "s#@@@APP@@@#${SECRETNAME}#g" \
-    $TEMPLATE > /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
+#old sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
+#old     -e "s/@@@SERVICEACCOUNT@@@/${SERVICEACCOUNT}/g" \
+#old     -e "s#@@@REMOTE_VAULT_ADDR@@@#${REMOTE_VAULT_ADDR}#g" \
+#old     -e "s#@@@ROLE@@@#${VAULT_ROLE}#g" \
+#old     -e "s#@@@SECRETPATH@@@#${SECRETPATH}#g" \
+#old     -e "s#@@@APP@@@#${SECRETNAME}#g" \
+#old     $TEMPLATE > /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
+
+f_sed    $TEMPLATE  /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
 echo "DEBUG: kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml"
 kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
 }
