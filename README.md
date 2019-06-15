@@ -6,10 +6,14 @@
 * vaultserver running in kubernetes 
   * (adapting to use external vaultserver should not be too hard)
 
+---
+
 | WARNING: Does not run with multiple (active/standby) vaultservers! |
 | --- |
 
  See [known issues](./README_issues.md)
+
+---
 
 ## one-step demos
 * [create_serviceaccount](./demo/nox-simple/README_sa.md)
