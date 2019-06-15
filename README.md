@@ -3,9 +3,8 @@
 ## all demos here **require**:
 
 1. an existing kubernetes cluster to be configured with cluster-admin rights!
-1. vaultserver running in kubernetes 
-  * (adapting to use external vaultserver should not be too hard)
-1. a configured vault cli with required permissions
+1. vaultserver running in same kubernetes cluster 
+1. a [configured vault cli](./README_cli.md) with required permissions
 
 
 ---
@@ -29,16 +28,8 @@
   * setup kubevault
   * setup SA
   * setup demos
+* purge everything option
 
 
-#### set Vault enviroment
-you might use (after editing to match your env):
-
-```
-# forward vaultserver to localhost and set required env
-source <(./set-vaul-cli.sh)
-# test access
-vault auth list
-```
 
 
