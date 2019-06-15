@@ -20,6 +20,7 @@ or same with getops
 ### prep
 1. create namespace demo if not existing
 1. create serviceaccount with name 'webaccount' in namespace 'demo'
+
 ### create
 1. random secret in secret/for/demo/webapp if "CREATE_SECRET=True"
 1. create clusterrolebinding 'webaccount-demo-tokenreview-binding'
