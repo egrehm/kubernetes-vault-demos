@@ -1,0 +1,32 @@
+
+- name: 'Init Helm'
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    helm ls || helm init
+
+- name: 'Init Helm -- give cluster-admin to Tiller'
+  shell: |
+    echo $KUBECONFIG
+    export KUBECONFIG={{ kubeconfigfile }}
+    if $(kubectl get serviceaccount --namespace kube-system tiller > /dev/null 2>&1);then
+      echo
+    else
+    kubectl create serviceaccount --namespace kube-system tiller
+    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller               
+    kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}' 
+    fi
+
+
+- name: 'Wait for tiller to be ready (2min max)'                                                             
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    helm ls > /dev/null 2>&1   # no pipe in command
+  #ignore_errors: true
+  register: helm_running
+  until:  helm_running.rc == 0
+  retries: 60
+  delay: 2
+
+
+
+# kubectl apply -f gitea.grehm.net_cert.yml

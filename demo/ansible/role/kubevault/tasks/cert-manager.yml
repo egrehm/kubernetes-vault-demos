@@ -1,0 +1,62 @@
+
+
+#- name: 'Init Helm'
+#  shell: helm ls || helm init
+
+# 1. test if it is running
+#
+
+- name: 'cert-manager install '
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    # needed for restorekubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.7/deploy/manifests/00-crds.yaml
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    helm upgrade --install cert-manager --namespace=cert  --set ingressShim.defaultIssuerName=letsencrypt-prod,ingressShim.defaultIssuerKind=ClusterIssuer jetstack/cert-manager
+    
+
+    #helm upgrade --install cert-manager --namespace=cert  --set ingressShim.defaultIssuerName=letsencrypt-prod,ingressShim.defaultIssuerKind=ClusterIssuer --version {{ certmanager_version }} jetstack/cert-manager
+
+
+- name: wait for cert-manager
+  shell: kubectl rollout status -n cert deployment cert-manager
+  delegate_to: localhost
+
+
+# TODO: wait for cert-manager to apply
+
+- name: 'cert-manager apply ClusterIssuer stage '
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    kubectl apply -f ./roles/cluster-svc/files/le-cluster-issuer-stage.yaml
+  register: cluster_isser_success
+  until: cluster_isser_success.rc == 0
+  retries: 10
+  delay: 4
+
+
+- name: 'cert-manager apply ClusterIssuer prod '
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    kubectl apply -f ./roles/cluster-svc/files/le-cluster-issuer-prod.yaml
+    #kubectl apply -f ./files/le-cluster-issuer-prod.yaml
+
+
+
+
+
+
+
+# to be implemented
+# 
+# 
+# needs pip  openshift - name: Create Letsencrypt cluster issuer PROD
+# needs pip  openshift   k8s:
+# needs pip  openshift     state: present
+# needs pip  openshift     src: le-cluster-issuer-prod.yaml 
+# needs pip  openshift 
+# needs pip  openshift 
+# needs pip  openshift - name: Create Letsencrypt cluster issuer  STAGE
+# needs pip  openshift   k8s:
+# needs pip  openshift     state: present
+# needs pip  openshift     src: le-cluster-issuer-stage.yaml 

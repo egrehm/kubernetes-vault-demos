@@ -1,0 +1,63 @@
+---
+# tasks file for roles/cluster-init
+
+# validate k8s working
+#
+
+- name: ' test cluster access '
+  shell: |
+    export KUBECONFIG={{ kubeconfigfile }}
+    kubectl get nodes
+  ignore_errors: true
+  register: cluster_access
+
+
+- name: 'Assure Helm is functional'
+  include_tasks: helm.yml
+  tags:
+    - helm
+  # when: > 
+  #   service is defined 
+  #   and 
+  #   ( service == "helm" 
+  #     or service == "all" 
+  #     or service == "min")
+
+
+- name: Helm purge failed services
+  shell: |
+    for SVC in $(helm ls | grep FAILED | awk '{ print $1 }'); do
+      helm delete --purge $SVC
+    done
+  register: helm_failed_svc 
+
+- name: 'Helm install nginx-ingress'
+  include_tasks: nginx-ingress.yml
+  tags:
+    - nginx-ingress
+  #when: service is defined and service=="nginx-ingress" or service=="all"
+  when: >
+    service is defined 
+    and 
+    ( service == "nginx-ingress" 
+      or service == "all" 
+      or service == "min")
+
+
+- name: 'Helm install cert-manager'
+  include_tasks: cert-manager.yml
+  tags:
+    - cert-manager
+  #when: service is defined and service=="cert-manager" or service=="all"
+  when: > 
+    service is defined 
+    and 
+    ( service == "cert-manager" 
+      or service == "all" 
+      or service == "min")
+
+- name: 'Helm install kubevault'
+  include_tasks: kubevault.yml
+  tags:
+    - kubevault
+  when: service is defined and service=="kubevault" or service=="all"

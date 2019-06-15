@@ -1,0 +1,7 @@
+kubeconfigfile: /home/dev/git/keys/api-token/k8s/config.{{ project }}
+kubevault:
+  - name: kubevault
+    namespace: vault 
+    etcd_version: 3.2.18
+
+

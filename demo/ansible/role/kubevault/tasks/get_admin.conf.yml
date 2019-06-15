@@ -1,0 +1,17 @@
+---
+- name: 'get cluster-admin credentials'
+  fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kubeconfigfile }}"
+
+    #dst: ~/{{ git_creds_repo }}/{{ project }}/admin.conf
+    #
+
+# this is probably nnot what you want :) - to be refactored
+- name: 'commit admin.conf to git secret store'
+  shell: git push
+  args:
+    chdir: ~/{{ git_secure_repo }} 
+  when: vault_secret is not defined
+
+# TODO: push to vault
