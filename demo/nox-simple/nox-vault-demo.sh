@@ -62,6 +62,7 @@ fi
 }
 
 f_gen_demo_pod(){
+TEMPLATE=${TEMPLATE:-pod-demo-tmpl.yaml}
 while $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); do
   echo "still deleting existing pod:   $(kubectl get po -n $NAMESPACE $APP --no-headers )"
   sleep 2
@@ -73,25 +74,45 @@ sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
     -e "s#@@@ROLE@@@#${VAULT_ROLE}#g" \
     -e "s#@@@SECRETPATH@@@#${SECRETPATH}#g" \
     -e "s#@@@APP@@@#${SECRETNAME}#g" \
-    pod-demo-tmpl.yaml > /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml
-echo "DEBUG: kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml"
-kubectl apply -f /tmp/pod-${SERVICEACCOUNT}-${NAMESPACE}.yaml
+    $TEMPLATE > /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
+echo "DEBUG: kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml"
+kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
 }
+
 f_gen_rw_demo_pods(){
+set -x
 NAMESPACE_SAVE=$NAMESPACE
 SERVICEACCOUNT_SAVE=$SERVICEACCOUNT
+# gen ci-cd demo sa, pod, policy and roles
 NAMESPACE=demo
 SERVICEACCOUNT=ci-cd-sec-creator
 TYPE=rw
-SECRETPATH=
-# create pod with rw role in demo secret/infra/ci_cd_created/team-a
-# creare random secrets
+SECRETPATH=secret/infra/ci_cd_created
+TEMPLATE=pod-rw-demo-tmpl.yaml
+APP=ci-cd
+# redefine
+VAULT_ROLE=${SERVICEACCOUNT}_${NAMESPACE}_${TYPE}
+POLICY=${APP}-${NAMESPACE}-${TYPE}
+f_init
+f_create_sa
+f_vault_gen_policy
+f_gen_demo_pod  
+
+# gen clients  ci-cd demo sa, pod, policy and roles
 for TEAM in team-a team-b team-c; do
+  TYPO=ro
+  APP=ro-client-app
   NAMESPACE=$TEAM
   SERVICEACCOUNT=${TEAM}-registry
+  TEMPLATE=pod-rw-client-demo-tmpl.yaml
+  SECRETPATH=secret/infra/ci_cd_created/$TEAM
+  # redefine
+  VAULT_ROLE=${SERVICEACCOUNT}_${NAMESPACE}_${TYPE}
+  POLICY=${APP}-${NAMESPACE}-${TYPE}
   f_init
   f_create_sa
   f_vault_gen_policy
+  f_gen_demo_pod  
 done
 NAMESPACE=$NAMESPACE_SAVE
 SERVICEACCOUNT=$SERVICEACCOUNT_SAVE
@@ -178,7 +199,7 @@ CREATE= ; RUN_DEMO= ; SERVICEACCOUNT=${SERVICEACCOUNT:-} ; NAMESPACE=${NAMESPACE
 
 ### GETOPTS
 #set -x
-while getopts ":a:p:n:s:v:t:r:gcdhS" opt; do
+while getopts ":a:p:n:s:v:t:rgcdhS" opt; do
     case "$opt" in
         a) APP="$OPTARG";;
         p) SECRETPATH="$OPTARG";;
@@ -210,6 +231,10 @@ REMOTE_VAULT_ADDR=${REMOTE_VAULT_ADDR:-$VAULTSERVER}
 VAULT_ROLE=${SERVICEACCOUNT}_${NAMESPACE}_${TYPE}
 POLICY=${APP}-${NAMESPACE}-${TYPE}
 SECRETNAME=$APP
+if [[ $RW_DEMO == True ]]; then
+  echo "create pods for read-write"
+  f_gen_rw_demo_pods  
+fi
 if [[ -n $NAMESPACE ]]; then
   f_init
 fi
@@ -230,10 +255,6 @@ fi
 if [[ $RUN_DEMO == True ]]; then
   echo "create pod in $NAMESPACE with sa: $SERVICEACCOUNT"
   f_gen_demo_pod  
-fi
-if [[ $RUN_DEMO == True ]]; then
-  echo "create pods for read-write"
-  f_gen_rw_demo_pods  
 fi
 if [[ ${GATHER_FACTS:-False} == True ]]; then
   f_gather_facts

@@ -19,9 +19,11 @@ spec:
           X_VAULT_TOKEN=$(cat /etc/vault/token);
           for SEC in team-a team-b team-c; do
             RANDOMSEC=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w16 | head -n1) || true ;
+            echo "DEBUG: write $RANDOMSEC to @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC";
             curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" --request POST --data '{"registrypass": "'"$RANDOMSEC"'"}'  @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC ;
+           echo "write /etc/app/$SEC" 
+           curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC > /etc/app/$SEC ;
           done;
-          cat /etc/app/@@@APP@@@.full | jq -j '.data.value' > /etc/app/@@@APP@@@
       volumeMounts:
         - mountPath: /etc/vault
           name: vault-token
@@ -40,21 +42,10 @@ spec:
         - "-c"
         - >
           while true; do
+            echo "I should see all 3 creds"
             cat /etc/app/@@@APP@@@;
             sleep 10;
           done ;
-      volumeMounts:
-      - mountPath: /etc/vault
-        name: vault-token
-      - name: app-creds
-        mountPath: /etc/app
-      env: 
-        - name: VAULT_ADDR 
-          value: @@@REMOTE_VAULT_ADDR@@@ 
-        - name: VAULT_SKIP_VERIFY 
-          value: "true"
-    - name: nginx
-      image: nginx
       volumeMounts:
       - mountPath: /etc/vault
         name: vault-token
