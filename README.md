@@ -21,7 +21,7 @@
 * [readwrite demo](./demo/nox-simple/README_rw.md) - simulate a CI-CD service creating secrets and 3 teams restricted to their own team credentials
 * [kubevault CRD](./demo/nox-simple/README_kubvault.md) - using kubevault CRDs
 
-## to be implemented
+#### to be implemented
 * helm demo ( one click purge)
 * ansible demos
   * setup kubevault
@@ -29,7 +29,7 @@
   * setup demos
 
 
-### set Vault enviroment
+#### set Vault enviroment
 you might use (after editing to match your env):
 
 ```
