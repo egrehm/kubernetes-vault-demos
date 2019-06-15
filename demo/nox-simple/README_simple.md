@@ -1,9 +1,12 @@
 # simple demo
 
-all demos here *require an existing kubernetes cluster* be configured with cluster-admin rights!
+all demos here require:
+ * an existing kubernetes cluster be configured with cluster-admin rights!
+ * a runningvault server
+ * a configured vault-cli matching permissions
 
 
-## create demo app against running vaultserver
+## create demo 
 
 *requires a configured vault cli* in the executing terminal (see set Vault enviroment)!
 
