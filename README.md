@@ -8,7 +8,8 @@ all demos here **require**:
 | WARNING: Does not run with multiple (active/standby) vaultservers! |
 | --- |
 
-... due to 'permission denied' issues wenn k8s-svc selects non active vaultservers (to be fixed)
+... due to 'permission denied' issues if k8s-svc selects non active vaultservers (to be fixed)
+
 **Make sure replicas is set to 1** 
 
 ```
