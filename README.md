@@ -2,9 +2,11 @@
 
 ## all demos here **require**:
 
-* an existing kubernetes cluster to be configured with cluster-admin rights!
-* vaultserver running in kubernetes 
+1. an existing kubernetes cluster to be configured with cluster-admin rights!
+1. vaultserver running in kubernetes 
   * (adapting to use external vaultserver should not be too hard)
+1. a configured vault cli with required permissions
+
 
 ---
 
