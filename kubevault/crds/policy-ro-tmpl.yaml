@@ -1,12 +1,12 @@
 apiVersion: policy.kubevault.com/v1alpha1
 kind: VaultPolicy
 metadata:
-  name: vault-ro
-  namespace:@@@NAMESPACE@@@
+  name: @@@POLICY@@@ 
+  namespace: @@@NAMESPACE@@@
 spec:
   vaultAppRef:
     name: vault
-    namespace: @@NAMESPACE@@@
+    namespace: @@@NAMESPACE@@@
   policy: |
     path "@@@SECRETPATH@@@/*" {
       capabilities = ["read", "list"]

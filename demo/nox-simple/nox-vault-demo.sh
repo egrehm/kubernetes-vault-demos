@@ -54,6 +54,16 @@ vault policy write ${POLICY}  /tmp/${POLICY}.hcl
 vault write auth/kubernetes/role/${VAULT_ROLE} bound_service_account_names=${SERVICEACCOUNT} bound_service_account_namespaces=${NAMESPACE} policies=${POLICY} ttl=24h
 }
 
+f_gen_kubevault_policy(){
+#envsubst < ../../kubevault/crds/policy-${TYPE}-tmpl.yaml > /tmp/${POLICY}.yaml
+#envsubst < ../../kubevault/crds/policy-binding-tmpl.yaml > /tmp/${POLICY}-bind.yaml
+
+f_sed ../../kubevault/crds/policy-binding-tmpl.yaml /tmp/${POLICY}-bind.yaml
+f_sed ../../kubevault/crds/policy-${TYPE}-tmpl.yaml /tmp/${POLICY}.yaml
+kubectl apply -f /tmp/${POLICY}.yaml 
+kubectl apply -f /tmp/${POLICY}-bind.yaml
+}
+
 f_del_demo_pod(){
 if $(kubectl get po -n $NAMESPACE $APP > /dev/null 2>&1 ); then
   echo "delete existing pod"
@@ -77,6 +87,18 @@ sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
     $TEMPLATE > /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
 echo "DEBUG: kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml"
 kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
+}
+
+f_sed(){
+# f_sed TEMPLATE DEST
+sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
+    -e "s/@@@SERVICEACCOUNT@@@/${SERVICEACCOUNT}/g" \
+    -e "s#@@@REMOTE_VAULT_ADDR@@@#${REMOTE_VAULT_ADDR}#g" \
+    -e "s#@@@ROLE@@@#${VAULT_ROLE}#g" \
+    -e "s#@@@SECRETPATH@@@#${SECRETPATH}#g" \
+    -e "s#@@@APP@@@#${SECRETNAME}#g" \
+    -e "s#@@@POLICY@@@#${POLICY}#g" \
+    $1 > $2
 }
 
 f_gen_rw_demo_pods(){
@@ -198,7 +220,7 @@ CREATE= ; RUN_DEMO= ; SERVICEACCOUNT=${SERVICEACCOUNT:-} ; NAMESPACE=${NAMESPACE
 
 ### GETOPTS
 #set -x
-while getopts ":a:p:n:s:v:t:rgcdhS" opt; do
+while getopts ":a:p:n:s:v:t:rgkcdhS" opt; do
     case "$opt" in
         a) APP="$OPTARG";;
         p) SECRETPATH="$OPTARG";;
@@ -207,6 +229,7 @@ while getopts ":a:p:n:s:v:t:rgcdhS" opt; do
         t) TYPE="$OPTARG";; # just ro or rw are valid
         r) RW_DEMO=True ;;
         v) REMOTE_VAULT_ADDR="$OPTARG";;
+        k) KUBEVAULT=True;;
         g) GATHER_FACTS=True;;
         c) CREATE=True ;;
         d) RUN_DEMO=True ;;
@@ -230,7 +253,7 @@ REMOTE_VAULT_ADDR=${REMOTE_VAULT_ADDR:-$VAULTSERVER}
 VAULT_ROLE=${SERVICEACCOUNT}_${NAMESPACE}_${TYPE}
 POLICY=${APP}-${NAMESPACE}-${TYPE}
 SECRETNAME=$APP
-if [[ $RW_DEMO == True ]]; then
+if [[ ${RW_DEMO:-False} == True ]]; then
   echo "create pods for read-write"
   f_gen_rw_demo_pods  
 fi
@@ -249,7 +272,11 @@ if [[ ${CREATE_SECRET:-False} == True ]]; then
 fi  
 if [[ $CREATE == True ]]; then
   APP=${APP:-config}
-  f_vault_gen_policy
+  if [[ $KUBEVAULT == True ]]; then
+    f_gen_kubevault_policy
+  else
+    f_vault_gen_policy
+  fi
 fi
 if [[ $RUN_DEMO == True ]]; then
   echo "create pod in $NAMESPACE with sa: $SERVICEACCOUNT"
