@@ -15,12 +15,12 @@ or same with getops
 ./nox-vault-demo.sh -c -a webapp -n demo -p secret/for/demo -t ro -s webaccount
 ```
 
-Steps:
+## executed steps:
 
-# prep
+### prep
 1. create namespace demo if not existing
 1. create serviceaccount with name 'webaccount' in namespace 'demo'
-# create
+### create
 1. random secret in secret/for/demo/webapp if "CREATE_SECRET=True"
 1. create clusterrolebinding 'webaccount-demo-tokenreview-binding'
 1. create vault ro|rw policy for 'secret/for/demo/\*'
