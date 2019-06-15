@@ -12,6 +12,7 @@ all demos here **require**:
 
 **Make sure replicas is set to 1** 
 
+for example:
 ```
 kubectl edit deployment -n vault vaultserver
 ```
