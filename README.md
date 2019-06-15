@@ -1,7 +1,14 @@
 # some demos for vault on kubernetes
 
-all demos here *require an existing kubernetes cluster* be configured with cluster-admin rights!
+all demos here **require**:
 
+* an existing kubernetes cluster to be configured with cluster-admin rights!
+* vaultserver running in kubernetes (adapting to use external vaultserver should not be too hard)
+
+| WARNING: Does not run with multiple (active/standby servern due to 'permission denied' issues wenn k8s-svc selects on active vaultserver! |
+| --- |
+
+Make sure replicas is set to **1** (i.e "kubectl edit deployment -n vault vaultserver")
 
 
 ## one-step demos
@@ -9,13 +16,9 @@ all demos here *require an existing kubernetes cluster* be configured with clust
 * [simple demo](./demo/nox-simple/README_simple.md) - run a pod with a credentials from vault
 * [readwrite demo](./demo/nox-simple/README_rw.md) - simulate a CI-CD service creating secrets and 3 teams restricted to their own team credentials
 * [kubevault CRD](./demo/nox-simple/README_kubvault.md) - using kubevault CRDs
+
 ## to be implemented
 * helm demo ( one click purge)
-
-
-
-
-
 
 
 ### set Vault enviroment
