@@ -17,12 +17,12 @@ spec:
           curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "@@@ROLE@@@"}' @@@REMOTE_VAULT_ADDR@@@/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
           cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
           X_VAULT_TOKEN=$(cat /etc/vault/token);
-          for SEC in team-a team-b team-c; do
+          for TEAM  in team-a team-b team-c; do
             RANDOMSEC=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w16 | head -n1) || true ;
-            echo "DEBUG: write $RANDOMSEC to @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC";
-            curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" --request POST --data '{"registrypass": "'"$RANDOMSEC"'"}'  @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC ;
-           echo "write /etc/app/$SEC" 
-           curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$SEC > /etc/app/$SEC ;
+            echo "DEBUG: write $RANDOMSEC to @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM";
+            curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" --request POST --data '{"registrypass": "'"$RANDOMSEC"'"}'  @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM/registrypass ;
+           echo "write /etc/app/$TEAM" 
+           curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM/registrypass > /etc/app/$TEAM ;
           done;
       volumeMounts:
         - mountPath: /etc/vault
@@ -41,11 +41,14 @@ spec:
         - "sh"
         - "-c"
         - >
-          while true; do
-            echo "I should see all 3 creds"
-            cat /etc/app/@@@APP@@@;
-            sleep 10;
-          done ;
+          echo "I should see all 3 creds";
+          for TEAM in team-a team-b team-c; do
+            if $(grep -q "permission denied" /etc/app/$TEAM); then
+              echo "### $TEAM   denied ###";
+            else
+              echo  "### $TEAM password: $(cat /etc/app/$TEAM) ###";
+            fi
+          done ; sh
       volumeMounts:
       - mountPath: /etc/vault
         name: vault-token
