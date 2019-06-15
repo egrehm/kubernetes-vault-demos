@@ -3,19 +3,13 @@
 all demos here **require**:
 
 * an existing kubernetes cluster to be configured with cluster-admin rights!
-* vaultserver running in kubernetes (adapting to use external vaultserver should not be too hard)
+* vaultserver running in kubernetes 
+  * (adapting to use external vaultserver should not be too hard)
 
 | WARNING: Does not run with multiple (active/standby) vaultservers! |
 | --- |
 
-... due to 'permission denied' issues if k8s-svc selects non active vaultservers (to be fixed)
-
-**Make sure replicas is set to 1** 
-
-for example:
-```
-kubectl edit deployment -n vault vaultserver
-```
+ See [known issues](./README_issues.md)
 
 ## one-step demos
 * [create_serviceaccount](./demo/nox-simple/README_sa.md)
@@ -25,6 +19,10 @@ kubectl edit deployment -n vault vaultserver
 
 ## to be implemented
 * helm demo ( one click purge)
+* ansible demos
+  * setup kubevault
+  * setup SA
+  * setup demos
 
 
 ### set Vault enviroment
