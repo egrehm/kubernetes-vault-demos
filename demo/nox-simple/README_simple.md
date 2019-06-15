@@ -23,17 +23,19 @@ export CREATE_SECRET=True
 1. create namespace demo if not existing
 1. create serviceaccount with name 'webaccount' in namespace 'demo'
 
-###  -c [create SA](./README_sa.md) steps
+### [create serviceaccount](./README_sa.md) -c
 
-###  -d deploy steps
+### deploy steps -d
   1. start pod 'webapp' in namespace 'demo' with serviceaccount 'webaccount'
   1. start vault initContainer
     1. use service account token to get vault_token
     1. use vault token to get pass and write it to '/etc/app/webapp'
   1. start your app with '/etc/app volumemount' and find '/etc/app/webapp'
 
-### '-g' gather facts:
+### gather facts -g
   1. do -g  get facts
+
+---
 
 the options are independent as far as Variables are provided und kubapi accepts the change :)
 ```
