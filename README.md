@@ -8,6 +8,10 @@ all demos here *require an existing kubernetes cluster* be configured with clust
 * [create_serviceaccount](./demo/nox-simple/README_sa.md)
 * [simple demo](./demo/nox-simple/README_simple.md) - run a pod with a credentials from vault
 * [readwrite demo](./demo/nox-simple/README_rw.md) - simulate a CI-CD service creating secrets and 3 teams restricted to their own team credentials
+## to be implemented
+* kubevault CRD
+* helm demo ( one click purge)
+
 
 
 
