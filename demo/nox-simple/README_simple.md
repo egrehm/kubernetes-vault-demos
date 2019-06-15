@@ -3,15 +3,7 @@
 all demos here *require an existing kubernetes cluster* be configured with cluster-admin rights!
 
 
-
-## create one-step demo app against running vaultserver
-### simple app
-(simple demo)[./demo/nox-simple/README_simple.md]
-### rw role example (i.e CI/CD should create creds)
-
-## just  create service account
-
-## with helm (T.B.I)
+## create demo app against running vaultserver
 
 *requires a configured vault cli* in the executing terminal (see set Vault enviroment)!
 

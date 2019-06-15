@@ -39,7 +39,7 @@ spec:
         - "sh"
         - "-c"
         - >
-          echo "I should see only my team creds";
+          echo "@@@SERVICEACCOUNT@@@ I should see only my team creds";
           for TEAM in team-a team-b team-c; do
             if $(grep -q "permission denied" /etc/app/$TEAM); then
               echo "### $TEAM   denied ###";
