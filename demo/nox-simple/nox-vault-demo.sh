@@ -80,7 +80,6 @@ kubectl apply -f /tmp/${SERVICEACCOUNT}-${NAMESPACE}-$TEMPLATE.yaml
 }
 
 f_gen_rw_demo_pods(){
-set -x
 NAMESPACE_SAVE=$NAMESPACE
 SERVICEACCOUNT_SAVE=$SERVICEACCOUNT
 # gen ci-cd demo sa, pod, policy and roles
