@@ -1,4 +1,4 @@
-# some demos for vault on kubernetes
+# simple demo
 
 all demos here *require an existing kubernetes cluster* be configured with cluster-admin rights!
 
