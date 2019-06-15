@@ -1,6 +1,6 @@
-# some demos for vault on kubernetes
+# Demos for vault on kubernetes
 
-all demos here **require**:
+## all demos here **require**:
 
 * an existing kubernetes cluster to be configured with cluster-admin rights!
 * vaultserver running in kubernetes 
