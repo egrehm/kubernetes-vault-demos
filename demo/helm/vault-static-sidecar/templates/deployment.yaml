@@ -33,14 +33,24 @@ spec:
             - "bash"
             - "-c"
             - >
-              ROLE={{ .Values.vault.serviceAccount }}_{{ .Release.Namespace }}_ro;
-              KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
-              curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "'"$ROLE"'"}' ${VAULT_ADDR}/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+              set -x;
+              ROLE="{{ .Values.vault.serviceAccount }}_{{ .Release.Namespace }}_ro";
+              echo "DEBUG: role= $ROLE";
+              export KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
+              curl  -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "'"$ROLE"'"}' ${VAULT_ADDR}/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+              echo "DEBUG: /etc/vault/fulltoken= $(cat /etc/vault/fulltoken)";
               cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
               X_VAULT_TOKEN=$(cat /etc/vault/token);
+              echo "DEBUG: X_VAULT_TOKEN=$X_VAULT_TOKEN";
               echo "DEBUG: get secret ${VAULT_ADDR}/v1/${VAULT_SECRETPATH}/${VAULT_SECRETNAME}";
               curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" ${VAULT_ADDR}/v1/${VAULT_SECRETPATH}/${VAULT_SECRETNAME}> /secret/${VAULT_SECRETNAME} ;
-              echo "DEBUG: read secret from /secret/$VAULT_SECRETNAME $(cat /secret/$VAULT_SECRETNAME)";
+              if [[ -s /secret/$VAULT_SECRETNAME ]]; then
+                echo "DEBUG: read secret from /secret/$VAULT_SECRETNAME $(cat /secret/$VAULT_SECRETNAME)";
+              else
+                echo "ERROR: no secret found";
+                curl -v -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "'"$ROLE"'"}' ${VAULT_ADDR}/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+                exit 66;
+              fi
           volumeMounts:
       {{- range $key, $value :=  .Values.vault.volumeMounts }}
           - name: {{ $key }}

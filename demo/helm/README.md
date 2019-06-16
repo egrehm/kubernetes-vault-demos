@@ -32,8 +32,16 @@ vault write auth/kubernetes/role/${VAULT_ROLE} bound_service_account_names=${K8S
 ```
 
 ### run your pod
-expects the enviroment and workingdir from above (where this README is also)
+expects the enviroment and workingdir from above (where this README also is)
 
 ```
 helm upgrade    --install ${APP}-vault-demo --namespace ${K8S_NAMESPACE} --set "vault.serviceAccount=${K8S_SERVICEACCOUNT},vault.env.VAULT_SECRETPATH=${SECRETPATH},vault.env.VAULT_SECRETNAME=${SECRETNAME}"  ./vault-static-sidecar
+```
+
+check results:
+
+```
+POD=$(kubectl get po -n $K8S_NAMESPACE --no-headers| awk '{ print $1 }')
+kubectl logs -n $K8S_NAMESPACE $POD vault-init
+kubectl exec -it -n $K8S_NAMESPACE $POD -c vault-static-sidecar cat /secret/${SECRETNAME}
 ```
