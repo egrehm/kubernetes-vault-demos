@@ -191,29 +191,41 @@ echo "##########################################################################
 echo "Created vault auth/kubernetes/role"
 echo "########################################################################################"
 vault read auth/kubernetes/role/${VAULT_ROLE}
+
+echo
 echo "########################################################################################"
 echo "Created vault policy ${POLICY}"
 echo "########################################################################################"
 vault policy read ${POLICY}
+
+echo
 echo "########################################################################################"
 echo "k8s serviceaccount in 'demo':"
 echo "########################################################################################"
 kubectl get sa -n ${NAMESPACE} $SERVICEACCOUNT
+
+echo
 echo "########################################################################################"
 echo "created clusterrolebinding:"
 echo "########################################################################################"
 kubectl get clusterrolebinding ${VAULT_ROLE}-tokenreview-binding 
+
+echo
 echo "########################################################################################"
 echo "Created secret from vaultserver  'secret/for/demo/${APP}':"
 echo "########################################################################################"
 vault read ${SECRETPATH}/${APP}
-echo "########################################################################################"
+
+echo
+echo
+echo "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Here is your vault password delivered into your container!"
 echo "Created passobjects from container ( cat /etc/app/${APP} /etc/app/${APP}.full):"  
-echo "########################################################################################"
+echo "#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo
 kubectl exec -it -n ${NAMESPACE} ${APP} -c curl -- cat /etc/app/${APP}.full /etc/app/${APP}
 echo
-echo "########################################################################################"
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 }
 
 
@@ -274,7 +286,7 @@ if [[ ${CREATE_SECRET:-False} == True ]]; then
 fi  
 if [[ $CREATE == True ]]; then
   APP=${APP:-config}
-  if [[ $KUBEVAULT == True ]]; then
+  if [[ ${KUBEVAULT:-False} == True ]]; then
     f_gen_kubevault_policy
   else
     f_vault_gen_policy

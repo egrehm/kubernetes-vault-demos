@@ -17,6 +17,7 @@ export CREATE_SECRET=True
 
 cd ./demo/nox-simple
 ./nox-vault-demo.sh -c -d -g
+export CREATE_SECRET=False   # You neeed to cleanup yourself this way
 ```
 
 ## executed steps:
