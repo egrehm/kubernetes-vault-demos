@@ -1,0 +1,11 @@
+all:
+  children:
+    ansiblemaster:
+      hosts:
+        localhost:
+          ansible_connection:    local
+          ansible_master: True
+          ansible_port:   22
+          ansible_python_interpreter: /usr/bin/python3
+      vars:
+        foo: bar
