@@ -17,19 +17,24 @@
 ---
 
 ## one-step demos
+
 * [create_serviceaccount](./demo/nox-simple/README_sa.md)
 * [simple demo](./demo/nox-simple/README_simple.md) - run a pod with a credentials from vault
 * [readwrite demo](./demo/nox-simple/README_rw.md) - simulate a CI-CD service creating secrets and 3 teams restricted to their own team credentials
 * [kubevault CRD](./demo/nox-simple/README_kubvault.md) - using kubevault CRDs
+* [helm demo](./demo/helm/README.md) - simple template with vault initContainer to fetch secret
+
+
+and if you need a vaultserver to play with:
+
+* [install a demo vaultserver](./README_setup_kubevault_server.md)
 
 #### to be implemented
-* helm demo ( one click purge)
 * ansible demos
-  * setup kubevault
   * setup SA
   * setup demos
 * purge everything option
-
+* add some pics for visalisation
 
 
 
