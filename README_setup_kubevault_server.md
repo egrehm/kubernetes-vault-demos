@@ -41,6 +41,6 @@ you can configure in ansiblemaster.yml:
 and decide the cluster you want to deploy kubevault to with:
 
 ```
-ansible-playbook ./cluster-svc.yml -i inventory/ansiblemaster.yml --extra-vars="project=a"
+ansible-playbook ./kubevault.yml -i inventory/ansiblemaster.yml --extra-vars="service=kubevault project=a"
 ``` 
 

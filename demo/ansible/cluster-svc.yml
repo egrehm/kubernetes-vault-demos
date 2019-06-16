@@ -1,7 +1,0 @@
----
-
-# ansible-playbook cluster-svc.yml -i inventory/ansiblemaster.yml --extra-vars="service=kubevault project=a"
-
-- hosts: ansiblemaster 
-  roles:
-    - { role: kubevault }
