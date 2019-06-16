@@ -1,9 +1,9 @@
-{{- if .Values.vault.serviceaccount}}
+{{- if .Values.vault.serviceAccount}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.vault.serviceaccount }}-binding
+  name: {{ .Values.vault.serviceAccount }}-{{ .Release.Namespace }}-binding
   namespace: {{ .Release.Namespace }} 
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -11,14 +11,14 @@ roleRef:
   name: system:auth-delegator
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.vault.serviceaccount }}
+  name: {{ .Values.vault.serviceAccount }}
   namespace: {{ .Release.Namespace }} 
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.vault.serviceaccount }} 
+  name: {{ .Values.vault.serviceAccount }} 
   namespace: {{ .Release.Namespace }} 
 
 {{- end }} 

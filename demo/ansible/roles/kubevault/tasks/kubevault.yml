@@ -4,7 +4,7 @@
 
 - name: 'Helm - install etcd '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
+    export KUBECONFIG=/{{ kubeconfigfile }}
     helm upgrade --install etcd-{{ item.name }} --namespace={{ item.namespace }} incubator/etcd --set "image.tag={{ item.etcd_version }}"
   with_items: "{{ kubevault }}"
   delegate_to: localhost
@@ -29,7 +29,7 @@
 
 - name: 'Helm - add appcode repo '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
+    export KUBECONFIG=/{{ kubeconfigfile }}
     helm repo list | grep appscode || helm repo add appscode https://charts.appscode.com/stable/
     helm repo update
   delegate_to: localhost
@@ -37,7 +37,7 @@
 
 - name: 'Helm - install kubevault operator '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
+    export KUBECONFIG=/{{ kubeconfigfile }}
     helm upgrade --install {{ item.name }}-{{ helmdomain }} --namespace={{ item.namespace }} appscode/vault-operator
   with_items: "{{ kubevault }}"
   delegate_to: localhost
@@ -45,7 +45,7 @@
 # not rdy! impl wait
 - name: 'kubectl - kubevault wait for CRDs '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
+    export KUBECONFIG=/{{ kubeconfigfile }}
     kubectl get crds -l app=vault 
   delegate_to: localhost
 
@@ -57,7 +57,7 @@
 
 - name: 'Helm - install kubevault catalog '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
+    export KUBECONFIG=/{{ kubeconfigfile }}
     helm upgrade --install {{ item.name }}-catalog-{{ helmdomain }} --namespace={{ item.namespace }} appscode/vault-catalog
   with_items: "{{ kubevault }}"
   delegate_to: localhost
@@ -67,6 +67,6 @@
 #  Version needs to be autodetected
 - name: 'kubectl - create Vaultserver '
   shell: |
-    export KUBECONFIG=/home/dev/git/keys/api-token/k8s/config.{{ project }}
-    kubectl apply -f ~/git/y/vault/kubevault/VaultServer_existingetcd.yaml 
+    export KUBECONFIG=/{{ kubeconfigfile }}
+    kubectl apply -f role/kubevault/files/VaultServer_existingetcd.yaml 
   delegate_to: localhost

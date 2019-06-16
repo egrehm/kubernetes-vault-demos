@@ -1,6 +1,6 @@
 # Default values for vault-static-sidecar.
 #
-## helm upgrade --install kubevault-nox-demo -n kubevault-nox-demo --set vault.serviceaccount=  
+## helm upgrade --install kubevault-nox-demo -n kubevault-nox-demo --set vault.serviceAccount=  
 #
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -9,13 +9,14 @@ replicaCount: 1
 
 ### vault sidecar
 vault:
-  serviceaccount:  
+  serviceAccount:  
   repository: egrehm/curl
   tag: 3
   env:
     VAULT_ADDR: https://vaultserver.vault.svc:8200 
     VAULT_SKIP_VERIFY: "true"
     VAULT_SECRETNAME: "secret"
+    VAULT_SECRETPATH: "secret/to/where/ever/you/want/and/may"
     #VAULT_ROLE:  default is  
   volumeMounts:
     vault-secret: /secret

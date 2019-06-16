@@ -33,15 +33,14 @@ spec:
             - "bash"
             - "-c"
             - >
+              ROLE={{ .Values.vault.serviceAccount }}_{{ .Release.Namespace }}_ro;
               KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token);
-              curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "{{ .Values.vault.serviceAccount }}_{{ .Release.Namespace }}"}' ${VAULT_ADDR}/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
+              curl -ks --request POST --data '{"jwt": "'"$KUBE_TOKEN"'", "role": "'"$ROLE"'"}' ${VAULT_ADDR}/v1/auth/kubernetes/login > /etc/vault/fulltoken ;
               cat /etc/vault/fulltoken | jq -j '.auth.client_token' > /etc/vault/token;
               X_VAULT_TOKEN=$(cat /etc/vault/token);
-              for TEAM in team-a team-b team-c; do
-              echo "DEBUG: get secret @@@REMOTE_VAULT_ADDR@@@/v1/secret/infra/ci_cd_created/$TEAM/registrypass";
-              curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" ${VAULT_ADDR}/v1/secret/infra/ci_cd_created/$TEAM/${VAULT_SECRETNAME}> /secret/${VAULT_ADDR} ;
-              cat /secret/$TEAM;
-              done
+              echo "DEBUG: get secret ${VAULT_ADDR}/v1/${VAULT_SECRETPATH}/${VAULT_SECRETNAME}";
+              curl -ks --header "X-Vault-Token: $X_VAULT_TOKEN" ${VAULT_ADDR}/v1/${VAULT_SECRETPATH}/${VAULT_SECRETNAME}> /secret/${VAULT_SECRETNAME} ;
+              echo "DEBUG: read secret from /secret/$VAULT_SECRETNAME $(cat /secret/$VAULT_SECRETNAME)";
           volumeMounts:
       {{- range $key, $value :=  .Values.vault.volumeMounts }}
           - name: {{ $key }}
@@ -75,17 +74,12 @@ spec:
           - name: {{ $key }}
             mountPath: {{ $value | quote }}
       {{- end }}
+      # TODO: handle your volumes here aswell
       volumes:
   {{- range $key , $value :=  .Values.vault.volumeMounts }}
-      # TODO: handle your volumes here aswell
       - name: {{ $key }}
         emptyDir: {}
   {{- end }}
-# https://github.com/helm/helm/issues/1311  # Values not exist with loop over a range
-#{{- $root := . -}}
-  # share secrets in empty Dir we can reuse keys from volumeMounts for volumes aswell
-  # {{- range $key, $value :=  .Values.vault.volumes }} # defime volumes explicit
-###     
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
