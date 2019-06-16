@@ -68,5 +68,5 @@
 - name: 'kubectl - create Vaultserver '
   shell: |
     export KUBECONFIG=/{{ kubeconfigfile }}
-    kubectl apply -f role/kubevault/files/VaultServer_existingetcd.yaml 
+    kubectl apply -f roles/kubevault/files/VaultServer_existingetcd.yaml 
   delegate_to: localhost

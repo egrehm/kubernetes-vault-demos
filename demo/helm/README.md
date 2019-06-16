@@ -22,7 +22,7 @@ envsubst < ../nox-simple/policy-${TYPE}-tmpl.hcl > /tmp/${POLICY}.hcl
 ```
 RANDOMLEN=16
 RANDOMSEC=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w${RANDOMLEN} | head -n1) || true 
-vault write ${SECRETPATH}/${SECRETNAME} password=${RANDOMSEC} base64password=$(echo "${RANDOMSEC} "| base64)
+vault write ${SECRETPATH}/${SECRETNAME} password=${RANDOMSEC} base64password=$(echo "${RANDOMSEC}"| base64)
 ```
 
 ### write policy and role
