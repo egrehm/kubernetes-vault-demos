@@ -1,5 +1,4 @@
 helmdomain: kubevault-demo
-kubeconfigfile: /home/dev/git/keys/api-token/k8s/config.{{ project }}
 kubevault:
   - name: kubevault
     namespace: vault 

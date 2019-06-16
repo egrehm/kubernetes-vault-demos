@@ -5,7 +5,7 @@ all:
         localhost:
           ansible_connection:    local
           ansible_master: True
-          ansible_port:   22
-          ansible_python_interpreter: /usr/bin/python3
+          #ansible_port:   22
+          #ansible_python_interpreter: /usr/bin/python3
       vars:
-        foo: bar
+        kubeconfigfile: /home/dev/git/keys/api-token/k8s/config.{{ project }}

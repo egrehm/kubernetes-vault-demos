@@ -60,4 +60,4 @@
   include_tasks: kubevault.yml
   tags:
     - kubevault
-  when: service is defined and service=="kubevault" or service=="all"
+  when: service is defined and service=="kubevault" or service=="all" or service is not defined

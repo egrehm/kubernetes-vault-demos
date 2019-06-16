@@ -3,7 +3,7 @@
 ## all demos here **require**:
 
 1. an existing kubernetes cluster to be configured with cluster-admin rights!
-1. vaultserver running in same kubernetes cluster 
+1. vaultserver running in same kubernetes cluster ( [ideally you would install a demo vaultserver](./README_setup_kubevault_server.md) )
 1. a [configured vault cli](./README_cli.md) with required permissions
 
 
