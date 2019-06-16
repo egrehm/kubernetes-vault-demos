@@ -28,7 +28,7 @@
 - name: 'cert-manager apply ClusterIssuer stage '
   shell: |
     export KUBECONFIG={{ kubeconfigfile }}
-    kubectl apply -f ./roles/cluster-svc/files/le-cluster-issuer-stage.yaml
+    kubectl apply -f ./roles/kubevault/files/le-cluster-issuer-stage.yaml
   register: cluster_isser_success
   until: cluster_isser_success.rc == 0
   retries: 10
@@ -38,7 +38,7 @@
 - name: 'cert-manager apply ClusterIssuer prod '
   shell: |
     export KUBECONFIG={{ kubeconfigfile }}
-    kubectl apply -f ./roles/cluster-svc/files/le-cluster-issuer-prod.yaml
+    kubectl apply -f ./roles/kubevault/files/le-cluster-issuer-prod.yaml
     #kubectl apply -f ./files/le-cluster-issuer-prod.yaml
 
 
