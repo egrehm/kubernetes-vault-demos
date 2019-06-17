@@ -104,10 +104,11 @@ sed -e "s/@@@NAMESPACE@@@/${NAMESPACE}/g" \
 }
 
 f_gen_rw_demo_pods(){
+set -x
 NAMESPACE_SAVE=$NAMESPACE
 SERVICEACCOUNT_SAVE=$SERVICEACCOUNT
 # gen ci-cd demo sa, pod, policy and roles
-NAMESPACE=demo
+NAMESPACE=buildsimulator
 SERVICEACCOUNT=ci-cd-sec-creator
 TYPE=rw
 SECRETPATH=secret/infra/ci_cd_created

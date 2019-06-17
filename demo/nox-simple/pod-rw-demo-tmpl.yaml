@@ -41,7 +41,7 @@ spec:
         - "sh"
         - "-c"
         - >
-          echo "I should see all 3 creds";
+          echo "CI/CD Supercow - I should see all 3 creds";
           for TEAM in team-a team-b team-c; do
             if $(grep -q "permission denied" /etc/app/$TEAM); then
               echo "### $TEAM   denied ###";
